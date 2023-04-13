@@ -1,0 +1,98 @@
+using UnityEngine;
+
+public class CarController : MonoBehaviour
+{
+    // Car movement variables
+    public float speed = 150.0f;
+    public float turnSpeed = 15.0f;
+
+    // Drifting variables
+    public float driftAngle = 45.0f;
+    public float driftControl = 0.1f;
+
+    // Boosting variables
+    public float boostSpeed = 300.0f;
+    public float boostTime = 3.0f;
+    private bool isBoosting = false;
+    private float boostTimer = 0.0f;
+
+    // Nitrous oxide variables
+    public float nitroSpeed = 500.0f;
+    public float nitroDuration = 2.0f;
+    private bool isNitro = false;
+    private float nitroTimer = 0.0f;
+
+    // Input variables
+    private float horizontalInput;
+    private float verticalInput;
+
+    // Components
+    private Rigidbody rb;
+    private AudioSource audioSource;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
+    }
+
+    void Update()
+    {
+        // Get input values
+        horizontalInput = Input.GetAxis("Horizontal");
+        verticalInput = Input.GetAxis("Vertical");
+
+        // Boosting
+        if (Input.GetKeyDown(KeyCode.Space) && !isNitro && !isBoosting)
+        {
+            isBoosting = true;
+            boostTimer = boostTime;
+        }
+
+        // Nitrous oxide
+        if (Input.GetKeyDown(KeyCode.LeftShift) && !isNitro && !isBoosting)
+        {
+            isNitro = true;
+            nitroTimer = nitroDuration;
+        }
+    }
+
+    void FixedUpdate()
+    {
+        // Move the car forward
+        rb.AddRelativeForce(Vector3.forward * speed * verticalInput);
+
+        // Turn the car
+        transform.Rotate(Vector3.up, turnSpeed * horizontalInput);
+
+        // Drifting
+        if (Mathf.Abs(horizontalInput) > 0 && Mathf.Abs(verticalInput) > 0)
+        {
+            rb.AddTorque(transform.up * horizontalInput * driftControl);
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + new Vector3(0, Mathf.Sign(horizontalInput) * driftAngle, 0));
+        }
+
+        // Boosting
+        if (isBoosting)
+        {
+            rb.AddRelativeForce(Vector3.forward * boostSpeed);
+            boostTimer -= Time.deltaTime;
+            if (boostTimer <= 0)
+            {
+                isBoosting = false;
+            }
+        }
+
+        // Nitrous oxide
+        if (isNitro)
+        {
+            speed = nitroSpeed;
+            nitroTimer -= Time.deltaTime;
+            if (nitroTimer <= 0)
+            {
+                isNitro = false;
+                speed = 150.0f; // Reset to default speed
+            }
+        }
+    }
+}
