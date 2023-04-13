@@ -1,0 +1,31 @@
+using UnityEngine;
+using System.Collections;
+
+public class CarController : MonoBehaviour
+{
+    //public variables for easy adjustment
+    public float speed = 10.0f;
+    public float rotationSpeed = 100.0f;
+
+    //private variables to handle input
+    private float verticalInput = 0.0f;
+    private float horizontalInput = 0.0f;
+
+    // Update is called once per frame
+    void Update()
+    {
+        //Get input from player for vertical and horizontal movement
+        verticalInput = Input.GetAxis("Vertical");
+        horizontalInput = Input.GetAxis("Horizontal");
+    }
+
+    //FixedUpdate is called at a fixed interval and is used for physics calculations
+    void FixedUpdate()
+    {
+        //Rotate car based on horizontal input
+        transform.Rotate(Vector3.up, horizontalInput * rotationSpeed * Time.deltaTime);
+
+        //Move car forward based on vertical input
+        transform.Translate(Vector3.forward * Time.deltaTime * speed * verticalInput);
+    }
+}
