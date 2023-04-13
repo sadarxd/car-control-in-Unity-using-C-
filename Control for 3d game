@@ -1,0 +1,62 @@
+using UnityEngine;
+using System.Collections;
+
+public class CarController : MonoBehaviour {
+
+    public float speed = 10.0f;
+    public float rotationSpeed = 100.0f;
+    public float driftFactor = 0.95f;
+    public float boostMultiplier = 2.0f;
+    public float nitroMultiplier = 3.0f;
+    public ParticleSystem nitroParticles;
+
+    private Rigidbody rb;
+    private float currentSpeed;
+    private float currentRotationSpeed;
+    private bool isBoosting;
+    private bool isNitroActivated;
+
+    void Start () {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    void FixedUpdate () {
+        float moveHorizontal = Input.GetAxis("Horizontal");
+        float moveVertical = Input.GetAxis("Vertical");
+
+        // Handle boost activation
+        if (Input.GetKeyDown(KeyCode.Space) && !isBoosting) {
+            isBoosting = true;
+            currentSpeed *= boostMultiplier;
+        }
+
+        // Handle nitro activation
+        if (Input.GetKeyDown(KeyCode.LeftShift) && !isNitroActivated) {
+            isNitroActivated = true;
+            currentSpeed *= nitroMultiplier;
+            nitroParticles.Play();
+        } else if (Input.GetKeyUp(KeyCode.LeftShift) && isNitroActivated) {
+            isNitroActivated = false;
+            currentSpeed /= nitroMultiplier;
+            nitroParticles.Stop();
+        }
+
+        // Calculate current speed and rotation speed based on boost/nitro activation
+        currentSpeed = isBoosting ? speed * boostMultiplier : (isNitroActivated ? speed * nitroMultiplier : speed);
+        currentRotationSpeed = isBoosting ? rotationSpeed * boostMultiplier : (isNitroActivated ? rotationSpeed * nitroMultiplier : rotationSpeed);
+
+        // Move the car forward and backward
+        Vector3 movement = transform.forward * moveVertical * currentSpeed * Time.deltaTime;
+        rb.MovePosition(rb.position + movement);
+
+        // Rotate the car left and right
+        float rotation = moveHorizontal * currentRotationSpeed * Time.deltaTime;
+        Quaternion deltaRotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
+        rb.MoveRotation(rb.rotation * deltaRotation);
+
+        // Handle drifting
+        if (Input.GetKey(KeyCode.LeftControl)) {
+            rb.velocity = rb.velocity * driftFactor;
+        }
+    }
+}
